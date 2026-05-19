@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萱萱儿的爱心字帖</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        }
+
+        .title {
+            position: absolute;
+            top: 20px;
+            font-size: 22px;
+            color: #e8a4b8;
+            letter-spacing: 6px;
+            opacity: 0;
+            animation: fadeInTitle 2s ease forwards;
+        }
+
+        @keyframes fadeInTitle {
+            to { opacity: 1; }
+        }
+
+        .heart-container {
+            position: relative;
+            width: 85vmin;
+            height: 85vmin;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .heart-word {
+            position: absolute;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            transform: scale(0.5);
+            animation: stickerAppear 2s ease forwards;
+            padding: 6px 10px;
+            border-radius: 10px;
+            box-shadow: 1px 2px 6px rgba(0,0,0,0.12);
+            border: 1px solid rgba(255,255,255,0.5);
+            z-index: 10;
+        }
+
+        @keyframes stickerAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(15px);
+            }
+            70% {
+                opacity: 0.95;
+                transform: scale(1.02) translateY(-2px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .signature {
+            position: absolute;
+            bottom: 30px;
+            font-size: 16px;
+            color: #d4a5b5;
+            letter-spacing: 3px;
+            opacity: 0;
+            animation: fadeInSignature 3s ease 5s forwards;
+        }
+
+        @keyframes fadeInSignature {
+            to { opacity: 1; }
+        }
+
+        /* 五颜六色的贴纸配色 */
+        .color-1 { background: linear-gradient(135deg, #FFB6C1, #FF69B4); color: white; }
+        .color-2 { background: linear-gradient(135deg, #87CEEB, #4169E1); color: white; }
+        .color-3 { background: linear-gradient(135deg, #98FB98, #32CD32); color: white; }
+        .color-4 { background: linear-gradient(135deg, #DDA0DD, #9370DB); color: white; }
+        .color-5 { background: linear-gradient(135deg, #F0E68C, #FFD700); color: #333; }
+        .color-6 { background: linear-gradient(135deg, #FFA07A, #FF6347); color: white; }
+        .color-7 { background: linear-gradient(135deg, #40E0D0, #20B2AA); color: white; }
+        .color-8 { background: linear-gradient(135deg, #FFC0CB, #FF1493); color: white; }
+        .color-9 { background: linear-gradient(135deg, #B0E0E6, #87CEFA); color: #333; }
+        .color-10 { background: linear-gradient(135deg, #FFE4B5, #FFA500); color: #333; }
+        .color-11 { background: linear-gradient(135deg, #E6E6FA, #DDA0DD); color: #333; }
+        .color-12 { background: linear-gradient(135deg, #F5DEB3, #DEB887); color: #333; }
+    </style>
+</head>
+<body>
+    <div class="title">💝 送给全宇宙最漂亮的萱萱儿 💝</div>
+    <div class="heart-container" id="heartContainer"></div>
+    <div class="signature">—— 永远陪伴你的人</div>
+
+    <script>
+        // 痛经暖心文案
+        const warmMessages = [
+            "萱萱儿", "多喝热水", "好好休息", "抱抱你", "不痛不痛",
+            "我在呢", "暖暖肚子", "睡个好觉", "放松心情", "很快就好",
+            "坚强宝宝", "最棒的你", "温柔以待", "岁月静好", "爱你哟",
+            "乖乖休息", "不要着凉", "热敷一下", "喝杯姜茶", "听听音乐",
+            "看看电影", "转移注意", "深呼吸", "放松身体", "一切都会好",
+            "你很勇敢", "超级厉害", "最美萱萱", "温柔萱萱", "可爱萱萱",
+            "贴心萱萱", "善良萱萱", "坚强萱萱", "优秀萱萱", "特别的人",
+            "我的宝贝", "心疼你", "照顾好自己", "快快恢复", "元气满满",
+            "又是美好一天", "阳光正好", "微风不燥", "温暖如春", "花开正好",
+            "时光温柔", "岁月静美", "平安喜乐", "万事胜意", "心想事成",
+            "笑口常开", "幸福安康", "甜甜蜜蜜", "顺顺利利", "开开心心",
+            "快快乐乐", "健健康康", "平平安安", "温温暖暖", "舒舒服服",
+            "轻轻松松", "无忧无虑", "自在随心", "从容优雅", "淡定自若",
+            "温柔坚定", "从容不迫", "优雅大方", "气质非凡", "光芒万丈",
+            "闪闪发光", "独一无二", "无可替代", "珍贵无比", "值得被爱",
+            "被世界温柔以待", "所有美好", "都属于你", "永远爱你", "一直陪伴",
+            "不离不弃", "永远支持", "永远相信", "永远鼓励", "永远守护",
+            "永远珍惜", "永远记得", "永远想念", "永远牵挂", "永远祝福"
+        ];
+
+        const container = document.getElementById('heartContainer');
+        const containerSize = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+        const centerX = containerSize / 2;
+        const centerY = containerSize / 2;
+        
+        // 爱心形状函数 - 判断点是否在爱心内
+        function isInHeart(x, y, scale) {
+            // 将坐标转换到爱心坐标系
+            const nx = (x - centerX) / scale;
+            const ny = (centerY - y) / scale;
+            
+            // 爱心方程: (x^2 + y^2 - 1)^3 - x^2 * y^3 <= 0
+            const a = nx * nx + ny * ny - 1;
+            return a * a * a - nx * nx * ny * ny * ny <= 0;
+        }
+
+        // 生成爱心轮廓上的点
+        function getHeartOutlinePoints(count) {
+            const points = [];
+            for (let i = 0; i < count; i++) {
+                const t = (i / count) * Math.PI * 2;
+                // 标准爱心参数方程
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+                points.push({ x, y });
+            }
+            return points;
+        }
+
+        // 生成爱心内部的点
+        function generateHeartPoints() {
+            const points = [];
+            const scale = containerSize / 22;
+            
+            // 1. 先生成轮廓点（最外层）
+            const outlinePoints = getHeartOutlinePoints(80);
+            outlinePoints.forEach((p, i) => {
+                points.push({
+                    x: centerX + p.x * scale * 0.95,
+                    y: centerY - p.y * scale * 0.95,
+                    delay: i * 0.08,
+                    isOutline: true
+                });
+            });
+
+            // 2. 生成内部填充点 - 使用网格采样确保在爱心内
+            const gridSize = 28;
+            const step = containerSize / gridSize;
+            
+            for (let row = 2; row < gridSize - 2; row++) {
+                for (let col = 2; col < gridSize - 2; col++) {
+                    const x = col * step;
+                    const y = row * step;
+                    
+                    // 检查是否在爱心内，稍微缩小一点爱心区域让轮廓更清晰
+                    if (isInHeart(x, y, scale * 0.85)) {
+                        // 距离中心越远，越早出现（从外向内）
+                        const distFromCenter = Math.sqrt(
+                            Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+                        );
+                        const maxDist = containerSize / 2;
+                        const delay = (distFromCenter / maxDist) * 4 + Math.random() * 2;
+                        
+                        points.push({
+                            x: x + (Math.random() - 0.5) * step * 0.3,
+                            y: y + (Math.random() - 0.5) * step * 0.3,
+                            delay: delay,
+                            isOutline: false
+                        });
+                    }
+                }
+            }
+
+            return points;
+        }
+
+        const points = generateHeartPoints();
+
+        // 创建文字元素
+        points.forEach((point, index) => {
+            const word = document.createElement('span');
+            const colorClass = 'color-' + (Math.floor(Math.random() * 12) + 1);
+            
+            word.className = 'heart-word ' + colorClass;
+            word.textContent = warmMessages[index % warmMessages.length];
+            word.style.left = point.x + 'px';
+            word.style.top = point.y + 'px';
+            word.style.animationDelay = point.delay + 's';
+            container.appendChild(word);
+        });
+    </script>
+</body>
+</html>
