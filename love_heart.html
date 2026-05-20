@@ -22,6 +22,33 @@
             font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
         }
 
+        /* ===== 页面切换 ===== */
+        .page {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        .page.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+        .page.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        /* ===== 第一页 ===== */
+        #page1 {
+            background: #ffffff;
+        }
+
         .title {
             position: absolute;
             top: 20px;
@@ -30,6 +57,7 @@
             letter-spacing: 6px;
             opacity: 0;
             animation: fadeInTitle 2s ease forwards;
+            z-index: 10;
         }
 
         @keyframes fadeInTitle {
@@ -52,7 +80,7 @@
             white-space: nowrap;
             opacity: 0;
             transform: scale(0.5);
-            animation: stickerAppear 2s ease forwards;
+            animation: stickerAppear 0.6s ease forwards;
             padding: 6px 10px;
             border-radius: 10px;
             box-shadow: 1px 2px 6px rgba(0,0,0,0.12);
@@ -82,11 +110,44 @@
             color: #d4a5b5;
             letter-spacing: 3px;
             opacity: 0;
-            animation: fadeInSignature 3s ease 5s forwards;
+            animation: fadeInSignature 3s ease forwards;
+            z-index: 10;
         }
 
         @keyframes fadeInSignature {
             to { opacity: 1; }
+        }
+
+        /* 下一页按钮 */
+        .next-btn {
+            position: absolute;
+            bottom: 80px;
+            z-index: 100;
+            padding: 14px 42px;
+            font-size: 18px;
+            color: white;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            letter-spacing: 4px;
+            box-shadow: 0 4px 20px rgba(255, 105, 180, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease, box-shadow 0.3s ease;
+            pointer-events: none;
+        }
+        .next-btn.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .next-btn:hover {
+            box-shadow: 0 6px 30px rgba(255, 105, 180, 0.6);
+            transform: translateY(-2px);
+        }
+        .next-btn:active {
+            transform: translateY(0);
         }
 
         /* 五颜六色的贴纸配色 */
@@ -102,126 +163,564 @@
         .color-10 { background: linear-gradient(135deg, #FFE4B5, #FFA500); color: #333; }
         .color-11 { background: linear-gradient(135deg, #E6E6FA, #DDA0DD); color: #333; }
         .color-12 { background: linear-gradient(135deg, #F5DEB3, #DEB887); color: #333; }
+
+        /* ===== 第二页 ===== */
+        #page2 {
+            background: #0a0a0a;
+        }
+        #threeCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
     </style>
 </head>
 <body>
+
+<!-- ===== 第一页：爱心字帖 ===== -->
+<div class="page active" id="page1">
     <div class="title">💝 送给全宇宙最漂亮的萱萱儿 💝</div>
     <div class="heart-container" id="heartContainer"></div>
     <div class="signature">—— 永远陪伴你的人</div>
+    <button class="next-btn" id="nextBtn">下一页 →</button>
+</div>
 
-    <script>
-        // 痛经暖心文案
-        const warmMessages = [
-            "萱萱儿", "多喝热水", "好好休息", "抱抱你", "不痛不痛",
-            "我在呢", "暖暖肚子", "睡个好觉", "放松心情", "很快就好",
-            "坚强宝宝", "最棒的你", "温柔以待", "岁月静好", "爱你哟",
-            "乖乖休息", "不要着凉", "热敷一下", "喝杯姜茶", "听听音乐",
-            "看看电影", "转移注意", "深呼吸", "放松身体", "一切都会好",
-            "你很勇敢", "超级厉害", "最美萱萱", "温柔萱萱", "可爱萱萱",
-            "贴心萱萱", "善良萱萱", "坚强萱萱", "优秀萱萱", "特别的人",
-            "我的宝贝", "心疼你", "照顾好自己", "快快恢复", "元气满满",
-            "又是美好一天", "阳光正好", "微风不燥", "温暖如春", "花开正好",
-            "时光温柔", "岁月静美", "平安喜乐", "万事胜意", "心想事成",
-            "笑口常开", "幸福安康", "甜甜蜜蜜", "顺顺利利", "开开心心",
-            "快快乐乐", "健健康康", "平平安安", "温温暖暖", "舒舒服服",
-            "轻轻松松", "无忧无虑", "自在随心", "从容优雅", "淡定自若",
-            "温柔坚定", "从容不迫", "优雅大方", "气质非凡", "光芒万丈",
-            "闪闪发光", "独一无二", "无可替代", "珍贵无比", "值得被爱",
-            "被世界温柔以待", "所有美好", "都属于你", "永远爱你", "一直陪伴",
-            "不离不弃", "永远支持", "永远相信", "永远鼓励", "永远守护",
-            "永远珍惜", "永远记得", "永远想念", "永远牵挂", "永远祝福"
-        ];
+<!-- ===== 第二页：3D粒子爱心 ===== -->
+<div class="page hidden" id="page2">
+    <canvas id="threeCanvas"></canvas>
+</div>
 
-        const container = document.getElementById('heartContainer');
-        const containerSize = Math.min(window.innerWidth, window.innerHeight) * 0.8;
-        const centerX = containerSize / 2;
-        const centerY = containerSize / 2;
-        
-        // 爱心形状函数 - 判断点是否在爱心内
-        function isInHeart(x, y, scale) {
-            // 将坐标转换到爱心坐标系
-            const nx = (x - centerX) / scale;
-            const ny = (centerY - y) / scale;
-            
-            // 爱心方程: (x^2 + y^2 - 1)^3 - x^2 * y^3 <= 0
-            const a = nx * nx + ny * ny - 1;
-            return a * a * a - nx * nx * ny * ny * ny <= 0;
+<!-- ===== 第一页脚本 ===== -->
+<script>
+(function() {
+    const warmMessages = [
+        "萱萱儿", "最美萱萱", "温柔萱萱", "可爱萱萱", "贴心萱萱",
+        "善良萱萱", "坚强萱萱", "优秀萱萱", "聪明萱萱", "勇敢萱萱",
+        "我的萱萱", "宝贝萱萱", "甜心萱萱", "小仙女萱萱", "小公主萱萱",
+        "多喝热水", "好好休息", "抱抱你", "不痛不痛", "我在呢",
+        "暖暖肚子", "睡个好觉", "放松心情", "很快就好", "坚强宝宝",
+        "乖乖休息", "不要着凉", "热敷一下", "喝杯姜茶", "贴暖宝宝",
+        "泡个热水脚", "盖好被子", "别碰冷水", "吃点红糖", "喝点热牛奶",
+        "休息最重要", "别太累", "躺一会儿", "闭目养神", "深呼吸",
+        "放松身体", "转移注意", "听听音乐", "看看电影", "追追剧",
+        "吃点甜食", "巧克力", "小蛋糕", "水果茶", "蜂蜜水",
+        "最棒的你", "温柔以待", "岁月静好", "爱你哟", "心疼你",
+        "照顾好自己", "快快恢复", "元气满满", "特别的人", "我的宝贝",
+        "你很勇敢", "超级厉害", "为你骄傲", "相信你", "支持你",
+        "陪着你", "守护你", "珍惜你", "想着你", "牵挂你",
+        "永远爱你", "一直陪伴", "不离不弃", "永远支持", "永远相信",
+        "永远鼓励", "永远守护", "永远珍惜", "永远记得", "永远想念",
+        "永远牵挂", "永远祝福", "永远期盼", "永远等待", "永远欢迎",
+        "永远敞开", "永远温暖", "永远明亮", "永远美好", "永远幸福",
+        "又是美好一天", "阳光正好", "微风不燥", "温暖如春", "花开正好",
+        "时光温柔", "岁月静美", "平安喜乐", "万事胜意", "心想事成",
+        "笑口常开", "幸福安康", "甜甜蜜蜜", "顺顺利利", "开开心心",
+        "快快乐乐", "健健康康", "平平安安", "温温暖暖", "舒舒服服",
+        "轻轻松松", "无忧无虑", "自在随心", "从容优雅", "淡定自若",
+        "温柔坚定", "从容不迫", "优雅大方", "气质非凡", "光芒万丈",
+        "闪闪发光", "独一无二", "无可替代", "珍贵无比", "值得被爱",
+        "被世界温柔以待", "所有美好", "都属于你",
+        "春风十里", "不如你", "星辰大海", "皆是你", "月光温柔",
+        "如你眼眸", "花开半夏", "念你如初", "时光不老", "我们不散",
+        "愿你所求", "皆能如愿", "愿你所得", "皆是美好", "愿你前路",
+        "皆是坦途", "愿你身边", "皆是温暖", "愿你眼中", "总有光芒",
+        "愿你心中", "总有希望", "愿你梦里", "总有甜蜜", "愿你醒来",
+        "总有惊喜", "愿你一生", "平安喜乐", "愿你一世", "幸福安康",
+        "小可爱", "小仙女", "小甜心", "小宝贝", "小公举",
+        "萌萌哒", "棒棒哒", "乖乖哒", "甜甜哒", "美美哒",
+        "加油鸭", "冲鸭", "爱你鸭", "想你鸭", "陪你鸭",
+        "么么哒", "比心", "笔芯", "贴贴", "抱抱",
+        "你超棒的", "你最优秀", "你最可爱", "你最温柔", "你最善良",
+        "你最特别", "你最珍贵", "你最闪耀", "你最迷人", "你最动人",
+        "相信自己", "你可以的", "你行的", "没问题", "小意思",
+        "慢慢来", "不着急", "有我在", "别怕", "别担心",
+        "一切都会好", "一切都会过去", "明天会更好", "未来可期", "人间值得",
+        "记得吃饭", "按时睡觉", "早点休息", "别熬夜", "多喝水",
+        "吃水果", "补充维生素", "注意保暖", "添件衣服", "别感冒",
+        "保持微笑", "保持开心", "保持乐观", "保持自信", "保持美丽",
+        "做自己", "爱自己", "疼自己", "宠自己", "对自己好一点",
+        "遇见你", "是我幸运", "认识你", "是我福气", "喜欢你",
+        "是我真心", "爱上你", "是我宿命", "陪伴你", "是我心愿",
+        "守护你", "是我责任", "珍惜你", "是我选择", "想念你",
+        "是我日常", "牵挂你", "是我习惯", "祝福你", "是我心愿"
+    ];
+
+    const container = document.getElementById('heartContainer');
+    const containerSize = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+    const centerX = containerSize / 2;
+    const centerY = containerSize / 2;
+
+    function isInHeart(x, y, scale) {
+        const nx = (x - centerX) / scale;
+        const ny = (centerY - y) / scale;
+        const a = nx * nx + ny * ny - 1;
+        return a * a * a - nx * nx * ny * ny * ny <= 0;
+    }
+
+    function getHeartOutlinePoints(count) {
+        const points = [];
+        for (let i = 0; i < count; i++) {
+            const t = (i / count) * Math.PI * 2;
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            points.push({ x, y });
         }
+        return points;
+    }
 
-        // 生成爱心轮廓上的点
-        function getHeartOutlinePoints(count) {
-            const points = [];
-            for (let i = 0; i < count; i++) {
-                const t = (i / count) * Math.PI * 2;
-                // 标准爱心参数方程
-                const x = 16 * Math.pow(Math.sin(t), 3);
-                const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-                points.push({ x, y });
-            }
-            return points;
-        }
+    function generateHeartPoints() {
+        const points = [];
+        const scale = containerSize / 22;
 
-        // 生成爱心内部的点
-        function generateHeartPoints() {
-            const points = [];
-            const scale = containerSize / 22;
-            
-            // 1. 先生成轮廓点（最外层）
-            const outlinePoints = getHeartOutlinePoints(80);
-            outlinePoints.forEach((p, i) => {
-                points.push({
-                    x: centerX + p.x * scale * 0.95,
-                    y: centerY - p.y * scale * 0.95,
-                    delay: i * 0.08,
-                    isOutline: true
-                });
+        const outlinePoints = getHeartOutlinePoints(80);
+        outlinePoints.forEach((p, i) => {
+            points.push({
+                x: centerX + p.x * scale * 0.95,
+                y: centerY - p.y * scale * 0.95,
+                delay: i * 0.15,  // 加快速度：0.5s -> 0.15s
+                isOutline: true
             });
+        });
 
-            // 2. 生成内部填充点 - 使用网格采样确保在爱心内
-            const gridSize = 28;
-            const step = containerSize / gridSize;
-            
-            for (let row = 2; row < gridSize - 2; row++) {
-                for (let col = 2; col < gridSize - 2; col++) {
-                    const x = col * step;
-                    const y = row * step;
-                    
-                    // 检查是否在爱心内，稍微缩小一点爱心区域让轮廓更清晰
-                    if (isInHeart(x, y, scale * 0.85)) {
-                        // 距离中心越远，越早出现（从外向内）
-                        const distFromCenter = Math.sqrt(
-                            Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
-                        );
-                        const maxDist = containerSize / 2;
-                        const delay = (distFromCenter / maxDist) * 4 + Math.random() * 2;
-                        
-                        points.push({
-                            x: x + (Math.random() - 0.5) * step * 0.3,
-                            y: y + (Math.random() - 0.5) * step * 0.3,
-                            delay: delay,
-                            isOutline: false
-                        });
-                    }
+        const gridSize = 28;
+        const step = containerSize / gridSize;
+        let internalIndex = 0;
+
+        for (let row = 2; row < gridSize - 2; row++) {
+            for (let col = 2; col < gridSize - 2; col++) {
+                const x = col * step;
+                const y = row * step;
+                if (isInHeart(x, y, scale * 0.85)) {
+                    const delay = 80 * 0.15 + internalIndex * 0.15;  // 加快速度
+                    points.push({
+                        x: x + (Math.random() - 0.5) * step * 0.3,
+                        y: y + (Math.random() - 0.5) * step * 0.3,
+                        delay: delay,
+                        isOutline: false
+                    });
+                    internalIndex++;
                 }
             }
+        }
+        return points;
+    }
 
-            return points;
+    const points = generateHeartPoints();
+
+    points.forEach((point, index) => {
+        const word = document.createElement('span');
+        const colorClass = 'color-' + (Math.floor(Math.random() * 12) + 1);
+        word.className = 'heart-word ' + colorClass;
+        word.textContent = warmMessages[index % warmMessages.length];
+        word.style.left = point.x + 'px';
+        word.style.top = point.y + 'px';
+        word.style.animationDelay = point.delay + 's';
+        container.appendChild(word);
+    });
+
+    const signatureDelay = points.length * 0.5 + 2;
+    document.querySelector('.signature').style.animationDelay = signatureDelay + 's';
+
+    // 所有贴纸完成后显示"下一页"按钮
+    const totalDelay = points[points.length - 1].delay + 1500; // 最后一个贴纸动画完成后再等1.5秒
+    setTimeout(() => {
+        document.getElementById('nextBtn').classList.add('show');
+    }, totalDelay);
+
+    // 页面切换
+    document.getElementById('nextBtn').addEventListener('click', function() {
+        document.getElementById('page1').classList.remove('active');
+        document.getElementById('page1').classList.add('hidden');
+        document.getElementById('page2').classList.remove('hidden');
+        document.getElementById('page2').classList.add('active');
+        // 初始化第二页3D场景
+        initPage2();
+    });
+})();
+</script>
+
+<!-- ===== 第二页脚本：Three.js 3D粒子爱心 - 钝角三角形版本 ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let page2Initialized = false;
+
+function initPage2() {
+    if (page2Initialized) return;
+    page2Initialized = true;
+
+    const canvas = document.getElementById('threeCanvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0a0a0a, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 20);
+
+    // ===== 生成3D爱心目标点 =====
+    function isInsideHeart2D(nx, ny) {
+        const a = nx * nx + ny * ny - 1;
+        return a * a * a - nx * nx * ny * ny * ny <= 0;
+    }
+    
+    function generateHeartPoints(count, minSpacing) {
+        const points = [];
+        const heartScale = 4.0;
+        const thickness = 2.5;
+        const candidates = [];
+        
+        for (let i = 0; i < count * 5; i++) {
+            const nx = (Math.random() - 0.5) * 3;
+            const ny = (Math.random() - 0.4) * 3;
+            if (!isInsideHeart2D(nx, ny)) continue;
+            
+            const a = nx * nx + ny * ny - 1;
+            const val = a * a * a - nx * nx * ny * ny * ny;
+            const distToEdge = Math.sqrt(Math.max(0, Math.abs(val))) * 3;
+            const localThickness = thickness * Math.min(1.0, distToEdge + 0.2);
+            
+            const nz = (Math.random() - 0.5) * 2;
+            const zScale = Math.sqrt(Math.max(0, 1 - nz * nz));
+            if (Math.random() > zScale) continue;
+            
+            const z = nz * localThickness;
+            
+            candidates.push({
+                x: nx * heartScale,
+                y: ny * heartScale + 3,
+                z: z
+            });
+        }
+        
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+        
+        for (const p of candidates) {
+            if (points.length >= count) break;
+            let tooClose = false;
+            for (const existing of points) {
+                const dx = p.x - existing.x, dy = p.y - existing.y, dz = p.z - existing.z;
+                if (Math.sqrt(dx*dx + dy*dy + dz*dz) < minSpacing) {
+                    tooClose = true; break;
+                }
+            }
+            if (!tooClose) points.push(p);
+        }
+        return points;
+    }
+
+    const TARGET_POINTS = generateHeartPoints(5000, 0.28); // 5000个粒子
+    
+    // ===== 粒子系统 =====
+    const BOTTOM_COUNT = 10000;
+    const TRAIL_COUNT = 2000; // 拖尾粒子
+    const TOTAL = BOTTOM_COUNT + TRAIL_COUNT + TARGET_POINTS.length;
+    
+    const positions = new Float32Array(TOTAL * 3);
+    const colors = new Float32Array(TOTAL * 3);
+    const sizes = new Float32Array(TOTAL);
+    const pType = new Uint8Array(TOTAL); // 0=底部, 1=飞行中, 2=爱心, 3=拖尾, 4=空位
+    const pProgress = new Float32Array(TOTAL);
+    const pTarget = new Int32Array(TOTAL).fill(-1);
+    const pStartPos = new Float32Array(TOTAL * 3);
+    const pSeed = new Float32Array(TOTAL);
+    const pLife = new Float32Array(TOTAL); // 生命值（用于消失效果）
+    
+    const greenColor = new THREE.Color(0x00e676);
+    const pinkColor = new THREE.Color(0xff69b4);
+    const whiteColor = new THREE.Color(0xffffff);
+    
+    const heartOccupied = new Uint8Array(TARGET_POINTS.length);
+    let nextSlot = 0;
+    
+    let idx = 0;
+    
+    // 1. 爱心目标位置（初始为空）
+    for (let i = 0; i < TARGET_POINTS.length; i++) {
+        positions[idx*3] = 0; positions[idx*3+1] = 0; positions[idx*3+2] = 0;
+        colors[idx*3] = pinkColor.r; colors[idx*3+1] = pinkColor.g; colors[idx*3+2] = pinkColor.b;
+        sizes[idx] = 0.1 + Math.random() * 0.04;
+        pType[idx] = 4; // 空位
+        pTarget[idx] = i;
+        heartOccupied[i] = 0;
+        pSeed[idx] = Math.random() * 100;
+        pLife[idx] = 1.0;
+        idx++;
+    }
+    
+    // 2. 底部10000个粒子 - 钝角三角形形状
+    // 三角形：顶角在上（被吸取的位置），底边在下
+    for (let i = 0; i < BOTTOM_COUNT; i++) {
+        // 钝角三角形参数
+        const triangleHeight = 8;
+        const baseWidth = 14;
+        
+        // 在三角形内随机采样
+        const yRatio = Math.pow(Math.random(), 0.7); // 更多粒子在上方（顶角附近）
+        const y = -10 + yRatio * triangleHeight;
+        
+        // 根据y计算当前宽度（线性插值：底边宽，顶角窄）
+        const currentWidth = baseWidth * (1 - yRatio);
+        const x = (Math.random() - 0.5) * currentWidth;
+        const z = (Math.random() - 0.5) * 3;
+        
+        positions[idx*3] = x;
+        positions[idx*3+1] = y;
+        positions[idx*3+2] = z;
+        
+        colors[idx*3] = greenColor.r; colors[idx*3+1] = greenColor.g; colors[idx*3+2] = greenColor.b;
+        sizes[idx] = 0.05 + Math.random() * 0.08;
+        pType[idx] = 0;
+        pSeed[idx] = Math.random() * 100;
+        idx++;
+    }
+    
+    // 3. 拖尾粒子池
+    for (let i = 0; i < TRAIL_COUNT; i++) {
+        positions[idx*3] = 0; positions[idx*3+1] = -100; positions[idx*3+2] = 0; // 初始隐藏
+        colors[idx*3] = whiteColor.r; colors[idx*3+1] = whiteColor.g; colors[idx*3+2] = whiteColor.b;
+        sizes[idx] = 0.04 + Math.random() * 0.06;
+        pType[idx] = 3; // 拖尾
+        pSeed[idx] = Math.random() * 100;
+        pLife[idx] = 0;
+        idx++;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+    const vertexShader = `
+        attribute float size;
+        varying vec3 vColor;
+        void main() {
+            vColor = color;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = size * (450.0 / -mvPosition.z);
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `;
+    const fragmentShader = `
+        varying vec3 vColor;
+        void main() {
+            float dist = length(gl_PointCoord - vec2(0.5));
+            if (dist > 0.5) discard;
+            float glow = exp(-dist * 2.5);
+            float alpha = glow * 0.9;
+            gl_FragColor = vec4(vColor * (1.0 + glow * 0.2), alpha);
+        }
+    `;
+    const material = new THREE.ShaderMaterial({
+        vertexShader, fragmentShader,
+        vertexColors: true, transparent: true,
+        depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    scene.add(new THREE.Points(geometry, material));
+
+    // ===== 动画 =====
+    const clock = new THREE.Clock();
+    let elapsed = 0;
+    let spawnTimer = 0;
+    const SPAWN_RATE = 0.008; // 快速发射
+    
+    // 拖尾系统：记录飞行粒子的历史位置
+    const trailHistory = []; // { particleIdx: number, positions: [{x,y,z}], life: number }
+    const MAX_TRAIL_LENGTH = 15;
+
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+    function rotateY(x, y, z, a) {
+        const c = Math.cos(a), s = Math.sin(a);
+        return { x: x*c - z*s, y, z: x*s + z*c };
+    }
+
+    function findEmptySlot() {
+        for (let i = 0; i < TARGET_POINTS.length; i++) {
+            const id = (nextSlot + i) % TARGET_POINTS.length;
+            if (!heartOccupied[id]) { 
+                nextSlot = (id+1) % TARGET_POINTS.length; 
+                return id; 
+            }
+        }
+        return -1;
+    }
+    
+    // 获取三角形顶角附近的粒子（y坐标最高的）
+    function findTopParticle() {
+        let bestIdx = -1;
+        let bestY = -100;
+        for (let i = TARGET_POINTS.length; i < TARGET_POINTS.length + BOTTOM_COUNT; i++) {
+            if (pType[i] === 0 && positions[i*3+1] > bestY) {
+                bestY = positions[i*3+1];
+                bestIdx = i;
+            }
+        }
+        return bestIdx;
+    }
+    
+    // 创建拖尾
+    function createTrail(flyingIdx) {
+        for (let i = TARGET_POINTS.length + BOTTOM_COUNT; i < TOTAL; i++) {
+            if (pType[i] === 3 && pLife[i] <= 0) {
+                pType[i] = 3;
+                pLife[i] = 1.0;
+                pTarget[i] = flyingIdx; // 跟随这个飞行粒子
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        elapsed += delta;
+        spawnTimer += delta;
+
+        const posArr = geometry.getAttribute('position').array;
+        const colArr = geometry.getAttribute('color').array;
+
+        const rotY = elapsed * 0.15; // 缓慢旋转
+
+        // 发射新粒子（从顶角吸取）
+        if (spawnTimer >= SPAWN_RATE) {
+            spawnTimer = 0;
+            const slot = findEmptySlot();
+            if (slot >= 0) {
+                const topIdx = findTopParticle();
+                if (topIdx >= 0) {
+                    pType[topIdx] = 1; // 变为飞行中
+                    pProgress[topIdx] = 0;
+                    pTarget[topIdx] = slot;
+                    heartOccupied[slot] = 1;
+                    // 记录起始位置
+                    pStartPos[topIdx*3] = posArr[topIdx*3];
+                    pStartPos[topIdx*3+1] = posArr[topIdx*3+1];
+                    pStartPos[topIdx*3+2] = posArr[topIdx*3+2];
+                    // 创建拖尾
+                    createTrail(topIdx);
+                }
+            }
         }
 
-        const points = generateHeartPoints();
-
-        // 创建文字元素
-        points.forEach((point, index) => {
-            const word = document.createElement('span');
-            const colorClass = 'color-' + (Math.floor(Math.random() * 12) + 1);
+        // 更新所有粒子
+        for (let i = 0; i < TOTAL; i++) {
+            const i3 = i * 3;
+            const type = pType[i];
+            const seed = pSeed[i];
             
-            word.className = 'heart-word ' + colorClass;
-            word.textContent = warmMessages[index % warmMessages.length];
-            word.style.left = point.x + 'px';
-            word.style.top = point.y + 'px';
-            word.style.animationDelay = point.delay + 's';
-            container.appendChild(word);
-        });
-    </script>
+            if (type === 0) {
+                // 底部三角形 - 不动
+                colArr[i3] = greenColor.r;
+                colArr[i3+1] = greenColor.g;
+                colArr[i3+2] = greenColor.b;
+                
+            } else if (type === 1) {
+                // 飞行中（主粒子）
+                pProgress[i] += delta * 0.5;
+                
+                if (pProgress[i] >= 1.0) {
+                    pProgress[i] = 1.0;
+                    pType[i] = 2; // 到达爱心
+                    const slot = pTarget[i];
+                    pType[slot] = 2; // 激活目标位置
+                    // 隐藏自己（由目标位置显示）
+                    posArr[i3] = 0; posArr[i3+1] = -100; posArr[i3+2] = 0;
+                    continue;
+                }
+                
+                const t = easeOutCubic(pProgress[i]);
+                const slot = pTarget[i];
+                const tp = TARGET_POINTS[slot];
+                const r = rotateY(tp.x, tp.y, tp.z, rotY);
+                const sx = pStartPos[i3], sy = pStartPos[i3+1], sz = pStartPos[i3+2];
+                
+                // 螺旋上升
+                const spiralTurns = 2.5;
+                const spiralAngle = t * Math.PI * 2 * spiralTurns + seed;
+                const spiralR = (1-t) * (2 + Math.sin(seed));
+                const fluidX = Math.cos(spiralAngle) * spiralR;
+                const fluidZ = Math.sin(spiralAngle) * spiralR * 0.4;
+                const arc = Math.sin(t * Math.PI) * 1.5;
+                
+                posArr[i3] = sx + (r.x - sx) * t + fluidX;
+                posArr[i3+1] = sy + (r.y - sy) * t + arc;
+                posArr[i3+2] = sz + (r.z - sz) * t + fluidZ;
+                
+                // 颜色：绿 → 白 → 粉
+                if (t < 0.75) {
+                    const ct = Math.min(t / 0.1, 1.0);
+                    colArr[i3] = greenColor.r + (whiteColor.r - greenColor.r) * ct;
+                    colArr[i3+1] = greenColor.g + (whiteColor.g - greenColor.g) * ct;
+                    colArr[i3+2] = greenColor.b + (whiteColor.b - greenColor.b) * ct;
+                } else {
+                    const ct = (t - 0.75) / 0.25;
+                    colArr[i3] = whiteColor.r + (pinkColor.r - whiteColor.r) * ct;
+                    colArr[i3+1] = whiteColor.g + (pinkColor.g - whiteColor.g) * ct;
+                    colArr[i3+2] = whiteColor.b + (pinkColor.b - whiteColor.b) * ct;
+                }
+                
+            } else if (type === 2) {
+                // 爱心粒子
+                if (i < TARGET_POINTS.length) {
+                    const tp = TARGET_POINTS[i];
+                    const r = rotateY(tp.x, tp.y, tp.z, rotY);
+                    posArr[i3] = r.x; posArr[i3+1] = r.y; posArr[i3+2] = r.z;
+                }
+                colArr[i3] = pinkColor.r;
+                colArr[i3+1] = pinkColor.g;
+                colArr[i3+2] = pinkColor.b;
+                
+            } else if (type === 3) {
+                // 拖尾粒子
+                if (pLife[i] > 0) {
+                    pLife[i] -= delta * 1.5; // 衰减
+                    const parentIdx = pTarget[i];
+                    if (parentIdx >= 0 && pType[parentIdx] === 1) {
+                        // 跟随父粒子，但延迟
+                        const px = posArr[parentIdx*3];
+                        const py = posArr[parentIdx*3+1];
+                        const pz = posArr[parentIdx*3+2];
+                        // 在父粒子下方形成拖尾
+                        posArr[i3] = px + (Math.random()-0.5)*0.5;
+                        posArr[i3+1] = py - 0.3 - Math.random()*0.5;
+                        posArr[i3+2] = pz + (Math.random()-0.5)*0.5;
+                    }
+                    // 白色半透明
+                    colArr[i3] = whiteColor.r;
+                    colArr[i3+1] = whiteColor.g;
+                    colArr[i3+2] = whiteColor.b;
+                    sizes[i] = 0.04 * pLife[i];
+                } else {
+                    // 隐藏
+                    posArr[i3] = 0; posArr[i3+1] = -100; posArr[i3+2] = 0;
+                    pLife[i] = 0;
+                }
+                
+            } else if (type === 4) {
+                // 空位
+                posArr[i3] = 0; posArr[i3+1] = 0; posArr[i3+2] = 0;
+            }
+        }
+
+        geometry.getAttribute('position').needsUpdate = true;
+        geometry.getAttribute('color').needsUpdate = true;
+        geometry.getAttribute('size').needsUpdate = true;
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+}
+</script>
+
 </body>
 </html>
